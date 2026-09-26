@@ -1,0 +1,45 @@
+name: Deploy AWS Lambda
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+
+      # 1. Get the code from GitHub
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Configure AWS credentials
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+
+      # 3. Create ZIP file
+      - name: Create Lambda ZIP
+        run: |
+          zip lambda.zip index.js
+
+      # 4. Deploy ZIP to Lambda
+      - name: Deploy Lambda
+        run: |
+          aws lambda update-function-code \
+            --function-name test \
+            --zip-file fileb://lambda.zip
+
+      # 5. Verify deployment
+      - name: Verify Lambda
+        run: |
+          aws lambda get-function \
+            --function-name test
